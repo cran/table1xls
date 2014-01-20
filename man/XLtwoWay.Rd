@@ -2,10 +2,10 @@
 \alias{XLtwoWay}
 \title{Two-way Contingency Tables exported to a spreadsheet}
 \usage{
-  XLtwoWay(wb, sheet, rowvar, colvar, sumby = 1,
-    rowTitle = "", rowNames = NULL, colNames = NULL,
-    ord = NULL, row1 = 1, col1 = 1, header = FALSE,
-    purge = FALSE, digits = 1)
+XLtwoWay(wb, sheet, rowvar, colvar, sumby = 1, rowTitle = "",
+  rowNames = NULL, colNames = NULL, ord = NULL, row1 = 1, col1 = 1,
+  header = FALSE, purge = FALSE, digits = 1, useNA = "ifany",
+  percents = TRUE)
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -48,46 +48,58 @@
 
   \item{digits}{numeric: how many digits (after the decimal
   point) to show in the percents table?}
+
+  \item{useNA}{How to handle missing values. Passed on to
+  \code{\link{table}} (see help on that function for
+  options).}
+
+  \item{percents}{logical: would you like only a count
+  table (\code{FALSE}), or also a percents table
+  side-by-side with the the count table (\code{TRUE},
+  default)?}
 }
 \value{
-  The function returns invisibly, after writing the data
-  into \code{sheet}.
+The function returns invisibly, after writing the data into
+\code{sheet}.
 }
 \description{
-  Producing 2-way descriptive tables, with percentages, and
-  exporting to .xls/.xlsx Format
+Producing 2-way descriptive tables, with percentages, and
+exporting to .xls/.xlsx Format
 }
 \details{
-  This function produces two identical tables side by side,
-  one with the cross-tabulated counts of unique values of
-  \code{rowvar, colvar} and the other with percentages,
-  calculated either by row (\code{sumby=1}) or column
-  (\code{sumby=2}). Row and column margins are also
-  automatically produced.
+This function produces two identical tables side by side,
+one with the cross-tabulated counts of unique values of
+\code{rowvar, colvar} and the other with percentages,
+calculated either by row (\code{sumby=1}) or column
+(\code{sumby=2}). Row and column margins are also
+automatically produced.
 
-  The tables are then exported to worksheet \code{sheet} in
-  workbook \code{wb}, using \code{\link{writeWorksheet}}
-  from the XLConnect package.
+The tables are then exported to worksheet \code{sheet} in
+workbook \code{wb}, using \code{\link{writeWorksheet}} from
+the XLConnect package.
 
-  The worksheet \code{sheet} does not have to pre-exist;
-  the function will create it if it doesn't already exist.
+The worksheet \code{sheet} does not have to pre-exist; the
+function will create it if it doesn't already exist.  Also,
+the changes are automatically saved to file.
 
-  There is an asymmetry between rows and columns, because
-  the tables are converted to data frame in order for
-  \code{\link{writeWorksheet}} to export them.
+There is an asymmetry between rows and columns, because the
+tables are converted to data frame in order for
+\code{\link{writeWorksheet}} to export them.
+
+If you want to avoid the margins and percentage tables on
+the side, use \code{\link{XLgeneric}}.
 }
 \note{
-  This function uses the internal function \code{fancytab2}
-  which produces 2-way tables with counts, percentages and
-  margins.
+This function uses the internal function \code{fancytab2}
+which produces 2-way tables with counts, percentages and
+margins.
 
-  The tables won't be visible on a spreadsheet, until you
-  use \code{\link{saveWorkbook}} to save and close
-  \code{wb}.
+The tables won't be visible on a spreadsheet, until you use
+\code{\link{saveWorkbook}} to save and close \code{wb}.
 
-  If \code{sheet} exists, it will be written into - rather
-  than completely cleared and rewritten de novo. However,
-  existing data in individual cells will be overwritten.
+If \code{sheet} exists, it will be written into - rather
+than completely cleared and rewritten de novo. However,
+existing data in individual cells will be overwritten.
 }
 \examples{
 
@@ -112,16 +124,15 @@ XLtwoWay(book3,"PartnersAKQcounts",cut(hand1,c(0,2:6,14)-0.5),cut(hand2,c(0,2:5,
          rowTitle="Hand 1 vs. Hand 2",rowNames=c(handNames[-5],5,"6 or more","Total"),
          colNames=c(handNames,"Total"),header=FALSE,row1=10,sumby=2)
 
-saveWorkbook(book3)
 cat("Look for",paste(getwd(),"hands.xls",sep='/'),"to see the results!\\n")
 }
 \author{
-  Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
-  Uses \code{\link{writeWorksheet}} to access the
-  spreadsheet. See \code{\link{setStyleAction}} to control
-  the output style. If interested in one-way tables, see
-  \code{\link{XLoneWay}}.
+Uses \code{\link{writeWorksheet}} to access the
+spreadsheet. See \code{\link{setStyleAction}} to control
+the output style. If interested in one-way tables, see
+\code{\link{XLoneWay}}.
 }
 

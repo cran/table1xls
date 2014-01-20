@@ -2,9 +2,10 @@
 \alias{XLoneWay}
 \title{One-way Contingency Tables exported to a spreadsheet}
 \usage{
-  XLoneWay(wb, sheet, rowvar, rowTitle = "Value",
-    rowNames = NULL, ord = NULL, row1 = 1, col1 = 1,
-    purge = FALSE, digits = 1, combine = TRUE)
+XLoneWay(wb, sheet, rowvar, rowTitle = "Value", rowNames = NULL,
+  ord = NULL, row1 = 1, col1 = 1, purge = FALSE,
+  digits = ifelse(length(rowvar) >= 200, 1, 0), combine = TRUE,
+  useNA = "ifany")
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -35,50 +36,53 @@
   (default \code{FALSE})}
 
   \item{digits}{numeric: how many digits (after the decimal
-  point) to show in the percents?}
+  point) to show in the percents? Defaults to 1 if n>=200,
+  0 otherwise.}
 
-  \item{combine}{logical: should counts and percents be
+  \item{combine}{logical: should counts and percentab be
   combined to the popular \code{"Count(percent)"} format,
   or presented side-by-side? (default \code{TRUE})}
+
+  \item{useNA}{How to handle missing values. Passed on to
+  \code{\link{table}} (see help on that function for
+  options).}
 }
 \value{
-  The function returns invisibly, after writing the data
-  into \code{sheet}.
+The function returns invisibly, after writing the data into
+\code{sheet}.
 }
 \description{
-  Calculates a one-way contingency table in counts and
-  percents, and exports a formatted output to a
-  spreadsheet.
+Calculates a one-way contingency table in counts and
+percentab, and exports a formatted output to a spreadsheet.
 }
 \details{
-  This function performs a one-way contingency table, also
-  calculating the distribution in percents.
+This function performs a one-way contingency table, also
+calculating the distribution in percentab.
 
-  The table is then exported to worksheet \code{sheet} in
-  workbook \code{wb}, either using the format
-  \code{"Count(percent)"} (if \code{combine=TRUE}), or as
-  two separate columns in the same table. Worksheet writing
-  uses \code{\link{writeWorksheet}} from the XLConnect
-  package.
+The table is then exported to worksheet \code{sheet} in
+workbook \code{wb}, either using the format
+\code{"Count(percent)"} (if \code{combine=TRUE}), or as two
+separate columns in the same table. Worksheet writing uses
+\code{\link{writeWorksheet}} from the XLConnect package.
 
-  The worksheet \code{sheet} does not have to pre-exist;
-  the function will create it if it doesn't already exist.
+The worksheet \code{sheet} does not have to pre-exist; the
+function will create it if it doesn't already exist. Also,
+the changes are automatically saved to file.
 }
 \examples{
 book1<-XLwriteOpen("chick1.xls") 
 XLoneWay(book1,"Diets",ChickWeight$Diet)
 XLoneWay(book1,"Diets",ChickWeight$Diet,combine=FALSE,row1=10,rowTitle="Diet")
-saveWorkbook(book1)
 cat("Look for",paste(getwd(),"chick1.xls",sep='/'),"to see the results!\\n")
 }
 \author{
-  Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
-  Uses \code{\link{writeWorksheet}} to access the
-  spreadsheet. See \code{\link{setStyleAction}} to control
-  the output style. If interested in one-way summary, see
-  \code{\link{XLunivariate}}. For two-way contingency
-  tables, see \code{\link{XLtwoWay}}.
+Uses \code{\link{writeWorksheet}} to access the
+spreadsheet. See \code{\link{setStyleAction}} to control
+the output style. If interested in one-way summary, see
+\code{\link{XLunivariate}}. For two-way contingency tables,
+see \code{\link{XLtwoWay}}.
 }
 

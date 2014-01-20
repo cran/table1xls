@@ -2,13 +2,11 @@
 \alias{XLunivariate}
 \title{Univariate Statistics Exported to Excel}
 \usage{
-  XLunivariate(wb, sheet, calcvar,
-    rowvar = rep("All", length(calcvar)),
-    fun1 = list(fun = roundmean, name = "Mean"),
-    fun2 = list(fun = roundSD, name = "SD"),
-    seps = c("", " (", ")"), rowTitle = "",
-    rowNames = NULL, ord = NULL, row1 = 1, col1 = 1,
-    title = "Summaries", purge = FALSE, ...)
+XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
+  fun1 = list(fun = roundmean, name = "Mean"), fun2 = list(fun = roundSD,
+  name = "SD"), seps = c("", " (", ")"), rowTitle = "", rowNames = NULL,
+  ord = NULL, row1 = 1, col1 = 1, title = "Summaries", purge = FALSE,
+  ...)
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -62,29 +60,33 @@
   \item{title}{character: title to be placed above table.}
 }
 \value{
-  The function returns invisibly, after writing the data
-  into \code{sheet}.
+The function returns invisibly, after writing the data into
+\code{sheet}.
 }
 \description{
-  Calculates univariate summary statistics (optionally
-  stratified), and exports the formatted output to a
-  spreadsheet.
+Calculates univariate summary statistics (optionally
+stratified), and exports the formatted output to a
+spreadsheet.
 }
 \details{
-  This function evaluates up to 2 univariate, functions on
-  the input vector \code{calcvar}, either across the
-  dataset or across strata defined by \code{rowvar}, and
-  returns a single-column table with formatted results.
+This function evaluates up to 2 univariate, functions on
+the input vector \code{calcvar}, either across the dataset
+or across strata defined by \code{rowvar}, and returns a
+single-column table with formatted results.
 
-  The cell can be formatted to show a combined result, e.g.
-  "Mean (SD)" which is the default. Tne function is quite
-  mutable: both \code{fun1$fun, fun2$fun} and the strings
-  separating their formatted output can be user-defined.
-  The functions can return either a string (i.e., a
-  formatted output) or a number that will be interpreted as
-  a string in subsequent formatting. The default calls
-  \code{\link{roundmean},\link{roundSD}} and prints the
-  summaries in \code{"mean(SD)"} format.
+If the named sheet does not yet exist, the function will
+create it. Also, the changes are automatically saved to
+file.
+
+The cell can be formatted to show a combined result, e.g.
+"Mean (SD)" which is the default. Tne function is quite
+mutable: both \code{fun1$fun, fun2$fun} and the strings
+separating their formatted output can be user-defined. The
+functions can return either a string (i.e., a formatted
+output) or a number that will be interpreted as a string in
+subsequent formatting. The default calls
+\code{\link{roundmean},\link{roundSD}} and prints the
+summaries in \code{"mean(SD)"} format.
 }
 \examples{
 book2<-XLwriteOpen("chick2.xls") 
@@ -101,18 +103,17 @@ XLunivariate(book2,"weightByDiet",ChickWeight$weight,ChickWeight$Diet,
 XLunivariate(book2,"weightByAge",ChickWeight$weight,ChickWeight$Time,
              title="Mean Weights by Age",rowTitle="Age (Days)",seps=rep("",3),
              fun2=list(fun=emptee,name=""))
-saveWorkbook(book2)
 cat("Look for",paste(getwd(),"chick2.xls",sep='/'),"to see the results!\\n")
 }
 \author{
-  Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
-  Uses \code{\link{writeWorksheet}} to access the
-  spreadsheet, \code{\link{rangeString}} for some utilities
-  that can be used as \code{fun1$fun,fun2$fun}. For one-way
-  (univariate) contingency tables, \code{\link{XLoneWay}}.
-  See \code{\link{setStyleAction}} to control the output
-  style.
+Uses \code{\link{writeWorksheet}} to access the
+spreadsheet, \code{\link{rangeString}} for some utilities
+that can be used as \code{fun1$fun,fun2$fun}. For one-way
+(univariate) contingency tables, \code{\link{XLoneWay}}.
+See \code{\link{setStyleAction}} to control the output
+style.
 }
 

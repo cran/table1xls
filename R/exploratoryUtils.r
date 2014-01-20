@@ -1,11 +1,15 @@
 
 
 
-
-fancytab2<-function(x,y=NULL,digits=1,sumby=2,rowvar="",rowNames=NULL)
+# This function is internal
+fancytab2<-function(x,y=NULL,digits=1,sumby=2,rowvar="",rowNames=NULL,missings='ifany')
 {
-tout=addmargins(table(x,y,useNA='ifany'))
+tout=addmargins(table(x,y,useNA=missings))
 pout=round(200*prop.table(tout,margin=sumby),digits)
+rownames(tout)[is.na(rownames(tout))]="missing"
+rownames(pout)[is.na(rownames(pout))]="missing"
+colnames(tout)[is.na(colnames(tout))]="missing"
+colnames(pout)[is.na(colnames(pout))]="missing"
 
 tout=as.data.frame(cbind(rownames(tout),as.data.frame.matrix(tout)))
 names(tout)[1]=rowvar
@@ -26,9 +30,11 @@ return(list(Counts=tout,Percent=pout))
 ##' 
 ##' The tables are then exported to worksheet \code{sheet} in workbook \code{wb}, using \code{\link{writeWorksheet}} from the XLConnect package.
 ##' 
-##' The worksheet \code{sheet} does not have to pre-exist; the function will create it if it doesn't already exist. 
+##' The worksheet \code{sheet} does not have to pre-exist; the function will create it if it doesn't already exist.  Also, the changes are automatically saved to file.
 ##' 
 ##' There is an asymmetry between rows and columns, because the tables are converted to data frame in order for \code{\link{writeWorksheet}} to export them.
+##' 
+##' If you want to avoid the margins and percentage tables on the side, use \code{\link{XLgeneric}}.
 ##' 
 ##' 
 ##' @title Two-way Contingency Tables exported to a spreadsheet
@@ -47,6 +53,9 @@ return(list(Counts=tout,Percent=pout))
 ##' @param purge logical: should \code{sheet} be created anew, by first removing the previous copy if it exists? (default \code{FALSE})
 ##' @param digits numeric: how many digits (after the decimal point) to show in the percents table?
 ##' 
+##' @param useNA How to handle missing values. Passed on to \code{\link{table}} (see help on that function for options).
+##' @param percents logical: would you like only a count table (\code{FALSE}), or also a percents table side-by-side with the the count table (\code{TRUE}, default)?  
+##' 
 ##' @return The function returns invisibly, after writing the data into \code{sheet}.
 ##' @example inst/examples/Ex2way.r 
 ##' @author Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
@@ -54,14 +63,15 @@ return(list(Counts=tout,Percent=pout))
 ##' @note This function uses the internal function \code{fancytab2} which produces 2-way tables with counts, percentages and margins. 
 ##' @note The tables won't be visible on a spreadsheet, until you use \code{\link{saveWorkbook}} to save and close \code{wb}.
 ##' @note If \code{sheet} exists, it will be written into - rather than completely cleared and rewritten de novo. However, existing data in individual cells will be overwritten.
+##' @export
 
-XLtwoWay<-function(wb,sheet,rowvar,colvar,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,header=FALSE,purge=FALSE,digits=1)
+XLtwoWay<-function(wb,sheet,rowvar,colvar,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,header=FALSE,purge=FALSE,digits=1,useNA='ifany',percents=TRUE)
 {
 
 if(purge) removeSheet(wb,sheet)
 if(!existsSheet(wb,sheet)) createSheet(wb,sheet)
 
-tab=fancytab2(rowvar,colvar,sumby=sumby,rowvar=rowTitle,rowNames=rowNames,digits=digits)
+tab=fancytab2(rowvar,colvar,sumby=sumby,rowvar=rowTitle,rowNames=rowNames,digits=digits,missings=useNA)
 if (is.null(ord)) ord=1:dim(tab$Counts)[1]
 if (!is.null(colNames)) 
 {
@@ -70,16 +80,17 @@ if (!is.null(colNames))
 }  
 writeWorksheet(wb,tab$Counts[ord,],sheet,startRow=row1+2,startCol=col1)
 widt=dim(tab$Counts)[2]+1
-writeWorksheet(wb,tab$Percent[ord,],sheet,startRow=row1+2,startCol=col1+widt+1)
+if(percents) writeWorksheet(wb,tab$Percent[ord,],sheet,startRow=row1+2,startCol=col1+widt+1)
 
 
 if(header)
 {
   writeWorksheet(wb,"Counts:",sheet,startRow=row1,startCol=col1)
-  writeWorksheet(wb,"Percent:",sheet,startRow=row1,startCol=col1+widt+1)
+  if(percents) writeWorksheet(wb,"Percent:",sheet,startRow=row1,startCol=col1+widt+1)
   clearRange(wb,sheet,c(row1,col1,row1,col1+widt+1))
 }
 setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+3), width=-1)
+saveWorkbook(wb)
 
 }  ### Function end
 
@@ -89,6 +100,8 @@ setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+3), width=-1)
 ##' Calculates univariate summary statistics (optionally stratified), and exports the formatted output to a spreadsheet.
 ##'
 ##' This function evaluates up to 2 univariate, functions on the input vector \code{calcvar}, either across the dataset or across strata defined by \code{rowvar}, and returns a single-column table with formatted results. 
+##' 
+##' If the named sheet does not yet exist, the function will create it. Also, the changes are automatically saved to file.
 ##' 
 ##' The cell can be formatted to show a combined result, e.g. "Mean (SD)" which is the default. Tne function is quite mutable: both \code{fun1$fun, fun2$fun} and the strings separating their formatted output can be user-defined. The functions can return either a string (i.e., a formatted output) or a number that will be interpreted as a string in subsequent formatting.
 ##' The default calls \code{\link{roundmean},\link{roundSD}} and prints the summaries in \code{"mean(SD)"} format.
@@ -115,6 +128,7 @@ setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+3), width=-1)
 ##' @param ... parameters passed on to \code{fun1$fun,fun2$fun}
 ##' @param title character: title to be placed above table.
 ##'
+##' @export
 
 XLunivariate<-function(wb,sheet,calcvar,rowvar=rep("All",length(calcvar)),fun1=list(fun=roundmean,name="Mean"),fun2=list(fun=roundSD,name="SD"),seps=c('',' (',')'),rowTitle="",rowNames=NULL,ord=NULL,row1=1,col1=1,title="Summaries",purge=FALSE,...)
 { 
@@ -133,7 +147,7 @@ writeWorksheet(wb,outdat[ord,],sheet,startRow=row1+2,startCol=col1)
 writeWorksheet(wb,title,sheet,startRow=row1,startCol=col1)
 clearRange(wb,sheet,c(row1,col1,row1,col1+1))
 setColumnWidth(wb, sheet = sheet, column = col1:(col1+3), width=-1)
-
+saveWorkbook(wb)
 }
   
 

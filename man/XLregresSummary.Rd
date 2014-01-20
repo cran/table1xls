@@ -2,11 +2,10 @@
 \alias{XLregresSummary}
 \title{Regression Summary Tables exported to a spreadsheet}
 \usage{
-  XLregresSummary(wb, sheet, varnames, betas, SE,
-    transfun = identity, effname = "Difference",
-    confac = qnorm(0.975), roundig = 2,
-    pfun = function(x) 2 * pnorm(-abs(x)), pround = 3,
-    row1 = 1, col1 = 1, purge = FALSE, title = NULL)
+XLregresSummary(wb, sheet, varnames, betas, SE, transfun = identity,
+  effname = "Difference", confac = qnorm(0.975), roundig = 2,
+  pfun = function(x) 2 * pnorm(-abs(x)), pround = 3, row1 = 1, col1 = 1,
+  purge = FALSE, title = NULL)
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -57,24 +56,27 @@
   (default \code{FALSE})}
 }
 \value{
-  The function returns invisibly, after writing the data
-  into \code{sheet}.
+The function returns invisibly, after writing the data into
+\code{sheet}.
 }
 \description{
-  Takes a vector of regression effect estimates and the
-  corresponding standard errors, transforms to "human
-  scale" if requested, calculates confidence-intervals, and
-  exports a standard formatted summary table to a
-  spreadsheet.
+Takes a vector of regression effect estimates and the
+corresponding standard errors, transforms to "human scale"
+if requested, calculates confidence-intervals, and exports
+a standard formatted summary table to a spreadsheet.
 }
 \details{
-  This function produces a standard scientific-article
-  regression summary table, given the raw regression
-  output. The output table has 4 columns: effect name, its
-  (optionally transformed) magnitude, a symmetric
-  confidence interval (likewise transformed) and p-value.
+If the named sheet does not yet exist in the target file,
+the function will create it. Also, the changes are
+automatically saved to file.
 
-  The formatted table is exported to \code{sheet}.
+This function produces a standard scientific-article
+regression summary table, given the raw regression output.
+The output table has 4 columns: effect name, its
+(optionally transformed) magnitude, a symmetric confidence
+interval (likewise transformed) and p-value.
+
+The formatted table is exported to \code{sheet}.
 }
 \examples{
 
@@ -103,7 +105,6 @@ XLregresSummary(book4,"Multiplier",varnames=quakenames,
                 pround=6,title="Relative Ground Acceleration Effects",transfun=function(x) 10^x,
                 effname="Multiplier",confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
 
-saveWorkbook(book4)
 cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 
 ### lm() does not take account of station or event level grouping.
@@ -121,6 +122,6 @@ cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 
 }
 \author{
-  Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 
