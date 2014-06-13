@@ -1,3 +1,19 @@
+Version 0.3.1 Release Notes (early summer 2014) 
+==============================
+
+Bug fixes:
+
+- Added automatic file-saving to `XLgeneric` (as promised by help text)
+- `row1,col1` are now "as advertised", i.e. the export really begins at the cell you tell it to (in some functions it was only "approximate").
+- Removed some outdated text from help pages.
+
+New features:
+
+- Added `XLaddText` for putting a text string anywhere in the file. This is now also the behind-the-scenes method for adding titles to tables in all other export functions.
+- `XLregresSummary` now also accepts a matrix as input, instead of providing effect names, point estimates and SEs separately (which is still possible). 
+- in `XLgeneric`, you can now modify the column names as well as the row names.
+
+
 Version 0.3 Release Notes (spring 2014, targeting R 3.1.0) 
 ==============================
 
@@ -5,7 +21,7 @@ Version 0.3 Release Notes (spring 2014, targeting R 3.1.0)
 - Fixed bug on handling missing values in XLoneWay, XLtwoWay, and explicitly added 'useNA' option passed directly on to table().
 - Added option not to write a percents table in XLtwoWay.
 - Fixed bug in XLoneWay that returned counts as text when `combine=FALSE`.
-- Added a saveWorkbook() command to all export functions, so that all changes are immediately saved to file.
+- Added an `XLConnect::saveWorkbook` command to all export functions, so that all changes are immediately saved to file.
 - Added this NEWS file...
 
 

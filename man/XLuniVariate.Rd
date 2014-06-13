@@ -4,9 +4,8 @@
 \usage{
 XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
   fun1 = list(fun = roundmean, name = "Mean"), fun2 = list(fun = roundSD,
-  name = "SD"), seps = c("", " (", ")"), rowTitle = "", rowNames = NULL,
-  ord = NULL, row1 = 1, col1 = 1, title = "Summaries", purge = FALSE,
-  ...)
+  name = "SD"), seps = c("", " (", ")"), title = NULL, rowTitle = "",
+  rowNames = NULL, ord = NULL, row1 = 1, col1 = 1, purge = FALSE, ...)
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -35,6 +34,9 @@ XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
   output of \code{fun2$fun}. Default behavior encloses the
   second output in parentheses. See 'Examples'.}
 
+  \item{title}{character: an optional overall title to the
+  table. Default (\code{NULL}) is no title.}
+
   \item{rowTitle}{character: the title to be placed above
   the row name column (default empty string)}
 
@@ -47,8 +49,7 @@ XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
   produced table. Default (\code{NULL}) is no re-ordering.}
 
   \item{row1,col1}{numeric: the first row and column
-  occupied by the table. In actuality, the first row will
-  be \code{row1+2}, to allow for an optional header.}
+  occupied by the table (title included if relevant).}
 
   \item{purge}{logical: should \code{sheet} be created
   anew, by first removing the previous copy if it exists?
@@ -56,27 +57,23 @@ XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
 
   \item{...}{parameters passed on to
   \code{fun1$fun,fun2$fun}}
-
-  \item{title}{character: title to be placed above table.}
 }
 \value{
 The function returns invisibly, after writing the data into
-\code{sheet}.
+\code{sheet} and saving the file.
 }
 \description{
 Calculates univariate summary statistics (optionally
-stratified), and exports the formatted output to a
-spreadsheet.
+stratified), exports the formatted output to a spreadsheet,
+and saves the file.
 }
 \details{
-This function evaluates up to 2 univariate, functions on
-the input vector \code{calcvar}, either across the dataset
-or across strata defined by \code{rowvar}, and returns a
-single-column table with formatted results.
-
-If the named sheet does not yet exist, the function will
-create it. Also, the changes are automatically saved to
-file.
+This function evaluates up to 2 univariate functions on the
+input vector \code{calcvar}, either as a single sample, or
+grouped by strata defined via \code{rowvar}. It produces a
+single-column table, each cell containing the formatted
+results from the two functions. The table is exported to a
+spreadsheet and the file is saved.
 
 The cell can be formatted to show a combined result, e.g.
 "Mean (SD)" which is the default. Tne function is quite
@@ -87,6 +84,9 @@ output) or a number that will be interpreted as a string in
 subsequent formatting. The default calls
 \code{\link{roundmean},\link{roundSD}} and prints the
 summaries in \code{"mean(SD)"} format.
+
+See the \code{\link{XLtwoWay}} help page, for behavior
+regarding new-sheet creation, overwriting, etc.
 }
 \examples{
 book2<-XLwriteOpen("chick2.xls") 
@@ -113,7 +113,5 @@ Uses \code{\link{writeWorksheet}} to access the
 spreadsheet, \code{\link{rangeString}} for some utilities
 that can be used as \code{fun1$fun,fun2$fun}. For one-way
 (univariate) contingency tables, \code{\link{XLoneWay}}.
-See \code{\link{setStyleAction}} to control the output
-style.
 }
 

@@ -6,12 +6,12 @@
 ##' Open a spreadsheet file (.xls or .xlsx), while deleting the previous copy if it exists.
 ##' 
 ##' The XLConnect function \code{\link{loadWorkbook}} can open existing spreadsheets or create new ones if they don't exist. 
-##' However, it *cannot* delete the previous copy when opening the new one -- which is the default behavior of software such as R. 
-##' As a result, analysts might inadvertently mix old and new versions of data and results, in the same spreadsheet.
+##' However, it *cannot* delete the previous copy when opening the new one -- which is the default expected behavior of software such as R. 
+##' As a result, analysts might inadvertently mix old and new versions of data and analyses, in the same spreadsheet.
 ##' 
-##' This short utility mitigates this risk, by calling \code{\link{unlink}} first to make sure existing copies are deleted before the new spreadsheet file is opened.
+##' This short utility mitigates the risk, by calling \code{\link{unlink}} first to make sure existing copies are deleted before the new spreadsheet file is opened.
 ##' 
-##' @note Even though the workbook object is created, and is linked to a specific file name, it will only be saved to disk after \code{\link{saveWorkbook}} is called. See example. The example also illustrates some of the peculiarities of working with \code{\link{XLConnect}}, many of which are taken care of when using \code{table1xls} functions.
+##' @note Even though the workbook object is created, and is linked to a specific file name, it will only be saved to disk after \code{\link{saveWorkbook}} is called. See example. From version 0.3.0 on, \code{table1xls} export functions all save the file by default. The example also illustrates some of the peculiarities of working with \code{\link{XLConnect}}, many of which are taken care of when using \code{table1xls} functions.
 ##' 
 ##' @param path character: the spreadsheet's full filename, including the extension. Only \code{.xls, .xlsx} extensions are allowed.
 ##' 
@@ -89,3 +89,43 @@ roundSD<-function(x,digits=1,na.rm=FALSE,...) round(sd(x,na.rm=na.rm),digits=dig
 #' @export
 
 emptee<-function(x,...) ""
+
+##' Write text to a single cell
+##' 
+##'   
+##' Write text to a single cell in a specified file and sheet, and save the file.
+##' 
+##' 
+##' Since XLConnect only exports data to spreadsheets as `data.frame`, this function sends the text as an on-the-fly `data.frame` with one column and one row, and without writing the header or the row name. 
+##' 
+##' @example inst/examples/ExGeneric.r
+##' 
+##' @param wb a \code{\link[XLConnect]{workbook-class}} object
+##' @param sheet numeric or character: a worksheet name (character) or position (numeric) within \code{wb}.
+##' @param text character: the text to be written to file.
+##' @param row1,col1 integer: the row and column for the output. 
+##' 
+##' @return The function returns invisibly, after writing the data into \code{sheet} and saving the file.
+##' 
+##' @note If the specified \code{sheet} does not exist, the function will create it, assuming that was the user's intent (e.g., add a text-only sheet with explanations to a file.) This is hard-coded, because the inadvertent creation of single-text sheets due to typos can be easily discovered upon opening the file :) 
+##' 
+XLaddText<-function(wb,sheet,text,row1=1,col1=1)
+{
+  if(!existsSheet(wb,sheet)) createSheet(wb,sheet)  
+  writeWorksheet(wb,data=text,sheet=sheet,startRow=row1,startCol=col1,header=FALSE)
+
+#  if(wrap)
+#  {
+#    cs <- createCellStyle(wb)
+#    setWrapText(cs, wrap = TRUE)
+#    setCellStyle(wb,sheet=sheet,row=row1,col=col1,cellstyle = cs)
+#    setRowHeight(wb, sheet = sheet, row=row1, height=-1)
+#  } else  
+setColumnWidth(wb, sheet = sheet, column = col1, width=-1)
+  
+  saveWorkbook(wb)
+}
+
+# Inactive:
+# @param wrap logical: should text be wrapped keeping its width as is  - or should column width auto-matched to fit text on one line? (default \code{FALSE})
+

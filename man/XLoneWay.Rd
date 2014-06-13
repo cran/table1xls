@@ -2,8 +2,8 @@
 \alias{XLoneWay}
 \title{One-way Contingency Tables exported to a spreadsheet}
 \usage{
-XLoneWay(wb, sheet, rowvar, rowTitle = "Value", rowNames = NULL,
-  ord = NULL, row1 = 1, col1 = 1, purge = FALSE,
+XLoneWay(wb, sheet, rowvar, title = NULL, rowTitle = "Value",
+  rowNames = NULL, ord = NULL, row1 = 1, col1 = 1, purge = FALSE,
   digits = ifelse(length(rowvar) >= 200, 1, 0), combine = TRUE,
   useNA = "ifany")
 }
@@ -17,6 +17,9 @@ XLoneWay(wb, sheet, rowvar, rowTitle = "Value", rowNames = NULL,
   \item{rowvar}{vector: the categorical variable (logical,
   numeric, character, factor, etc.) to be tabulated}
 
+  \item{title}{character: an optional overall title to the
+  table. Default (\code{NULL}) is no title.}
+
   \item{rowTitle}{character: the title to be placed above
   the row name column (default empty string)}
 
@@ -29,7 +32,7 @@ XLoneWay(wb, sheet, rowvar, rowTitle = "Value", rowNames = NULL,
   re-ordering.}
 
   \item{row1,col1}{numeric: the first row and column
-  occupied by the table.}
+  occupied by the table (title included if relevant).}
 
   \item{purge}{logical should \code{sheet} be created anew,
   by first removing the previous copy if it exists?
@@ -49,39 +52,38 @@ XLoneWay(wb, sheet, rowvar, rowTitle = "Value", rowNames = NULL,
 }
 \value{
 The function returns invisibly, after writing the data into
-\code{sheet}.
+\code{sheet} and saving the file.
 }
 \description{
 Calculates a one-way contingency table in counts and
-percentab, and exports a formatted output to a spreadsheet.
+percents, exports a formatted output to a spreadsheet, and
+saves the file.
 }
 \details{
 This function performs a one-way contingency table, also
-calculating the distribution in percentab.
+calculating the distribution in percents.
 
 The table is then exported to worksheet \code{sheet} in
 workbook \code{wb}, either using the format
 \code{"Count(percent)"} (if \code{combine=TRUE}), or as two
-separate columns in the same table. Worksheet writing uses
-\code{\link{writeWorksheet}} from the XLConnect package.
+separate columns in the same table.
 
-The worksheet \code{sheet} does not have to pre-exist; the
-function will create it if it doesn't already exist. Also,
-the changes are automatically saved to file.
+See the \code{\link{XLtwoWay}} help page, for behavior
+regarding new-sheet creation, overwriting, etc.
 }
 \examples{
 book1<-XLwriteOpen("chick1.xls") 
 XLoneWay(book1,"Diets",ChickWeight$Diet)
-XLoneWay(book1,"Diets",ChickWeight$Diet,combine=FALSE,row1=10,rowTitle="Diet")
+### Now in separate columns, and with a title - note it shifts the table down.
+XLoneWay(book1,"Diets",ChickWeight$Diet,combine=FALSE,row1=10,
+         rowTitle="Diet",title="Counts by Diet:")
 cat("Look for",paste(getwd(),"chick1.xls",sep='/'),"to see the results!\\n")
 }
 \author{
 Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
-Uses \code{\link{writeWorksheet}} to access the
-spreadsheet. See \code{\link{setStyleAction}} to control
-the output style. If interested in one-way summary, see
+If interested in other descriptive summaries, see
 \code{\link{XLunivariate}}. For two-way contingency tables,
 see \code{\link{XLtwoWay}}.
 }

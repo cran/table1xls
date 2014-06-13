@@ -20,12 +20,12 @@ previous copy if it exists.
 The XLConnect function \code{\link{loadWorkbook}} can open
 existing spreadsheets or create new ones if they don't
 exist. However, it *cannot* delete the previous copy when
-opening the new one -- which is the default behavior of
-software such as R. As a result, analysts might
-inadvertently mix old and new versions of data and results,
-in the same spreadsheet.
+opening the new one -- which is the default expected
+behavior of software such as R. As a result, analysts might
+inadvertently mix old and new versions of data and
+analyses, in the same spreadsheet.
 
-This short utility mitigates this risk, by calling
+This short utility mitigates the risk, by calling
 \code{\link{unlink}} first to make sure existing copies are
 deleted before the new spreadsheet file is opened.
 }
@@ -33,9 +33,11 @@ deleted before the new spreadsheet file is opened.
 Even though the workbook object is created, and is linked
 to a specific file name, it will only be saved to disk
 after \code{\link{saveWorkbook}} is called. See example.
-The example also illustrates some of the peculiarities of
-working with \code{\link{XLConnect}}, many of which are
-taken care of when using \code{table1xls} functions.
+From version 0.3.0 on, \code{table1xls} export functions
+all save the file by default. The example also illustrates
+some of the peculiarities of working with
+\code{\link{XLConnect}}, many of which are taken care of
+when using \code{table1xls} functions.
 }
 \examples{
 ### Run this example in successive copy-paste batches

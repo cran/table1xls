@@ -2,10 +2,10 @@
 \alias{XLregresSummary}
 \title{Regression Summary Tables exported to a spreadsheet}
 \usage{
-XLregresSummary(wb, sheet, varnames, betas, SE, transfun = identity,
-  effname = "Difference", confac = qnorm(0.975), roundig = 2,
-  pfun = function(x) 2 * pnorm(-abs(x)), pround = 3, row1 = 1, col1 = 1,
-  purge = FALSE, title = NULL)
+XLregresSummary(wb, sheet, betas, SE = NULL, varnames = NULL, colid = 1:2,
+  transfun = identity, title = NULL, effname = "Difference",
+  confac = qnorm(0.975), roundig = 2, pfun = function(x) 2 *
+  pnorm(-abs(x)), pround = 3, row1 = 1, col1 = 1, purge = FALSE)
 }
 \arguments{
   \item{wb}{a \code{\link[XLConnect]{workbook-class}}
@@ -14,13 +14,21 @@ XLregresSummary(wb, sheet, varnames, betas, SE, transfun = identity,
   \item{sheet}{numeric or character: a worksheet name
   (character) or position (numeric) within \code{wb}.}
 
-  \item{varnames}{character: a vector of effect names
-  (column 1 of output table)}
-
-  \item{betas}{numeric: a vector of effect estimates}
+  \item{betas}{numeric: a vector of point estimates, or a
+  matrix containing estimates and standard errors in
+  columns}
 
   \item{SE}{numeric: a vector of standard-error estimates
-  for the effects}
+  for the effects. If \code{NULL} (default), user needs to
+  specify them via the \code{betas} matrix.}
+
+  \item{varnames}{character: a vector of effect names
+  (column 1 of output table). If \code{NULL} (default),
+  user needs to specify them via the \code{betas} matrix.}
+
+  \item{colid}{integer: vector of indices for the columns
+  containing the point estimates and SEs, respectively.
+  Used only if \code{betas} is a matrix.}
 
   \item{transfun}{transformation function for
   \code{betas,SE}, to produce columns 2-3 of the output.
@@ -39,17 +47,20 @@ XLregresSummary(wb, sheet, varnames, betas, SE, transfun = identity,
   on the signal-to-noise ratio \code{betas/SE}. Default
   assumes two-sided Normal p-values.}
 
-  \item{title}{character: title to be placed above table.}
+  \item{title}{character: an optional overall title to the
+  table. Default (\code{NULL}) is no title.}
 
   \item{roundig}{numeric: how many digits (after the
   decimal point) to round the effect estimate to?}
 
   \item{pround}{numeric: how many digits (after the decimal
-  point) to round the p-value to?}
+  point) to round the p-value to? P-values rounded down to
+  zero will show up as "<" the smallest nonzero value, e.g.
+  with the default \code{pround=3} p-values smaller than
+  0.0005 will show up as "<0.001".}
 
   \item{row1,col1}{numeric: the first row and column
-  occupied by the table. In actuality, the first row will
-  be \code{row1+2}, to allow for an optional title.}
+  occupied by the table (title included if relevant).}
 
   \item{purge}{logical: should \code{sheet} be created
   anew, by first removing the previous copy if it exists?
@@ -60,23 +71,29 @@ The function returns invisibly, after writing the data into
 \code{sheet}.
 }
 \description{
-Takes a vector of regression effect estimates and the
-corresponding standard errors, transforms to "human scale"
-if requested, calculates confidence-intervals, and exports
-a standard formatted summary table to a spreadsheet.
+Takes regression effect estimates and the corresponding
+standard errors, transforms to "human scale" if requested,
+calculates confidence-intervals and p-values, and exports a
+standard formatted summary table to a spreadsheet.
 }
 \details{
-If the named sheet does not yet exist in the target file,
-the function will create it. Also, the changes are
-automatically saved to file.
-
 This function produces a standard scientific-article
 regression summary table, given the raw regression output.
-The output table has 4 columns: effect name, its
-(optionally transformed) magnitude, a symmetric confidence
-interval (likewise transformed) and p-value.
+The resulting table has 4 columns: effect name, its
+(optionally transformed) magnitude, a probabilistically
+symmetric confidence interval (likewise transformed), and
+p-value. The formatted table is exported to \code{sheet},
+and the file is immediately saved.
 
-The formatted table is exported to \code{sheet}.
+The input can be provided as separate vectors of point
+estimates (\code{betas}) and standard errors (\code{SE}),
+or as a single matrix for \code{betas}. In the latter case,
+as a default the effect names will be
+\code{rownames(betas)}, unless a vector with more
+descriptive names is provided via \code{varnames}.
+
+See the \code{\link{XLtwoWay}} help page, for behavior
+regarding new-sheet creation, overwriting, etc.
 }
 \examples{
 
@@ -95,15 +112,26 @@ quakemod1=summary(lm(log10(accel)~mag+log10(dist),data=attenu))
 
 XLregresSummary(book4,"ModelScale",varnames=quakenames,
                 betas=quakemod1$coef[-1,1],SE=quakemod1$coef[-1,2],
-                pround=6,title="Log-Ground Acceleration Effects",
+                ,title="Log-Ground Acceleration Effects",
                 confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
 
-## Effects arguably more meaningful as percent change. So still same model, but different summaries:
+## Same thing, but using matrix input; no need to provide SE and names. 
+## It is arguably still nicer to provide your own names - but could be a reproducibility risk. 
+## Also, increasing the p-value resolution by changing 'pround'.
 
-XLregresSummary(book4,"Multiplier",varnames=quakenames,
-                betas=quakemod1$coef[-1,1],SE=quakemod1$coef[-1,2],
-                pround=6,title="Relative Ground Acceleration Effects",transfun=function(x) 10^x,
-                effname="Multiplier",confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
+XLregresSummary(book4,"ModelScale",betas=quakemod1$coef[-1,],
+                pround=6,title="Log-Ground Acceleration Effects",
+                confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179),row1=8)
+
+## Effects are arguably more meaningful as percent change. 
+## So... still same model, but different summaries. 
+## Also, note the combination of matrix input with names over-written via 'varnames':
+
+XLregresSummary(book4,"PercentChange",varnames=quakenames,
+                betas=quakemod1$coef[-1,],
+                roundig=1,pround=6,title="Relative Ground Acceleration Effects",
+                transfun=function(x) 100*(10^x-1),
+                effname="Percent Change",confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
 
 cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 
@@ -116,8 +144,9 @@ cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 # 
 # XLregresSummary(book4,"MixedModel",varnames=quakenames,betas=fixef(quakemod2)[-1],
 # SE=sqrt(diag(vcov(quakemod2)))[-1],
-# pround=6,title="Relative Ground Acceleration Effects",
-# transfun=function(x) 10^x,effname="Multiplier",
+# roundig=1,pround=6,
+# title="Relative Ground Acceleration Effects",
+# transfun=function(x) 100*(10^x-1),effname="Percent Change",
 # confac=qt(0.975,160),pfun=function(x) 2*pt(-abs(x),df=160))
 
 }
