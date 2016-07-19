@@ -2,10 +2,10 @@
 
 
 # This function is internal
-fancytab2<-function(x,y=NULL,digits=1,sumby=2,rowvar="",rowNames=NULL,missings='ifany')
+fancytab2<-function(x,y=NULL,digits,sumby=2,rowvar="",rowNames=NULL,missings='ifany')
 {
 tout=addmargins(table(x,y,useNA=missings))
-pout=round(200*prop.table(tout,margin=sumby),digits)
+pout=format(round(200*prop.table(tout,margin=sumby),digits),nsmall=digits,trim=TRUE)
 rownames(tout)[is.na(rownames(tout))]="missing"
 rownames(pout)[is.na(rownames(pout))]="missing"
 colnames(tout)[is.na(colnames(tout))]="missing"
@@ -24,23 +24,23 @@ return(list(Counts=tout,Percent=pout))
 
 ##' Produces 2-way contingency tables, optionally with percentages, exports them to a spreadsheet, and saves the file.
 ##' 
-##' This function produces two identically-sized tables side by side, one with the cross-tabulated counts of unique values of \code{rowvar, colvar}
-##' and the other with percentages, calculated either by row (\code{sumby=1}, default) or column (\code{sumby=2}).
-##' Row and column margins are also automatically produced. ##' Tables are automatically saved to the file associated with the \code{wb} spreadsheet object. 
+##' This function produces two-way cross-tabulated counts of unique values of \code{rowvar, colvar},
+##' optionally with percentages, calculated either by row (\code{sumby=1}, default) or column (\code{sumby=2}).
+##' Row and column margins are also produced. ##' Tables are automatically saved to the file associated with the \code{wb} spreadsheet object. 
 ##' 
-##' There is an asymmetry between rows and columns, because the tables are converted to data frame in order for \code{\link{writeWorksheet}} to export them.
+##' There is an underlying asymmetry between rows and columns, because the tables are converted to data frame in order for \code{\link{writeWorksheet}} to export them.
 
-##' If you want to avoid the percentage tables on the side, choose \code{percents=FALSE}. If you also want no margins, just use the simpler function \code{\link{XLgeneric}}.
+##' The percents can be in parentheses in the same cells as the counts (\code{combine=TRUE}, default), in an identically-sized table on the side (\code{combine=FALSE,percents=TRUE}), or absent (\code{combine=FALSE,percents=FALSE}). If you want no margins, just use the simpler function \code{\link{XLgeneric}}.
 ##' 
 
 ##' @note The worksheet \code{sheet} does not have to pre-exist; the function will create it if it doesn't already exist.
 #' 
-##' @note If \code{sheet} exists, it will be written into - rather than completely cleared and rewritten de novo. Only existing data in individual cells that are part of the exported tables' target range will be overwritten. If you do want to clear an existing sheet while exporting the new tables, set \code{purge=TRUE}. This behavior, and the usage of \code{purge}, are the same across all \code{table1xls} export functions.
+##' @note By default, if \code{sheet} exists, it will be written into - rather than completely cleared and rewritten de novo. Only existing data in individual cells that are part of the exported tables' target range will be overwritten. If you do want to clear an existing sheet while exporting the new tables, set \code{purge=TRUE}. This behavior, and the usage of \code{purge}, are the same across all \code{table1xls} export functions.
 ##' 
 ##' 
 ##' @title Two-way Contingency Tables exported to a spreadsheet
 ##'
-##' @param wb a \code{\link[XLConnect]{workbook-class}} object
+##' @param wb an \code{\link[XLConnect]{workbook-class}} object
 ##' @param sheet numeric or character: a worksheet name (character) or position (numeric) within \code{wb}.
 ##' @param rowvar vector: categorical variable (logical, numeric, character, factor, etc.) for the table's rows
 ##' @param colvar vector: categorical variable (logical, numeric, character factor, etc.) for the table's columns
@@ -50,12 +50,12 @@ return(list(Counts=tout,Percent=pout))
 ##' @param ord numeric vector specifying row-index order in the produced table. Default (\code{NULL}) is no re-ordering.
 ##' @param row1,col1 numeric: the first row and column occupied by the table (title included if relevant).
 ##' @param title character: an optional overall title to the table. Default (\code{NULL}) is no title.
-##' @param header logical: should a header row with the captions "Counts:" and "Percentages:" be added right above the tables? (default \code{FALSE}; ignored in any case if \code{percents=FALSE})
+##' @param header logical: should a header row with the captions "Counts:" and "Percentages:" be added right above the tables? Relevant only when \code{combine=FALSE,percents=TRUE})
 ##' @param purge logical: should \code{sheet} be created anew, by first removing the previous copy if it exists? (default \code{FALSE})
-##' @param digits numeric: how many digits (after the decimal point) to show in the percents table?
-##' 
+##' @param digits numeric: how many digits (after the decimal point) to show in the percents? Defaults to 1 if n>=500, 0 otherwise.
 ##' @param useNA How to handle missing values. Passed on to \code{\link{table}} (see help on that function for options).
 ##' @param percents logical: would you like only a count table (\code{FALSE}), or also a percents table side-by-side with the the count table (\code{TRUE}, default)?  
+##' @param combine logical: should counts and percents be combined to the popular \code{"Count(percent)"} format, or presented side-by-side in separate tables? (default: same value as \code{percents}) 
 ##' 
 ##' @return The function returns invisibly, after writing the data into \code{sheet}.
 ##' @example inst/examples/Ex2way.r 
@@ -65,22 +65,20 @@ return(list(Counts=tout,Percent=pout))
 
 ##' @export
 
-XLtwoWay<-function(wb,sheet,rowvar,colvar,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,title=NULL,header=FALSE,purge=FALSE,digits=1,useNA='ifany',percents=TRUE)
+XLtwoWay<-function(wb,sheet,rowvar,colvar,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,title=NULL,header=FALSE,purge=FALSE,digits=ifelse(length(rowvar)>=500,1,0),useNA='ifany',percents=TRUE,combine=percents)
 {
-
+if(length(rowvar)!=length(colvar)) stop("x:y length mismatch.\n")
 if(purge) removeSheet(wb,sheet)
 if(!existsSheet(wb,sheet)) createSheet(wb,sheet)
 
 ### Producing counts and percents table via the internal function 'fancytab2'
 tab=fancytab2(rowvar,colvar,sumby=sumby,rowvar=rowTitle,rowNames=rowNames,digits=digits,missings=useNA)
 
-
 if(!is.null(title))  ### Adding a title
 {
   XLaddText(wb,sheet,text=title,row1=row1,col1=col1)
   row1=row1+1
 }
-
 
 if (is.null(ord)) ord=1:dim(tab$Counts)[1]
 if (!is.null(colNames)) 
@@ -90,18 +88,28 @@ if (!is.null(colNames))
 }
 
 widt=dim(tab$Counts)[2]+1
-if(percents && header)  ### adding headers indicating 'counts' and 'percents'
+if(combine) ### combining counts and percents to a single table (default)
 {
-  XLaddText(wb,sheet,"Counts:",row1=row1,col1=col1)
-  XLaddText(wb,sheet,"Percent:",row1=row1,col1=col1+widt+1)
-  row1=row1+1
+  
+    tabout=as.data.frame(mapply(paste0,tab$Count[,-1],' (',tab$Percent[,-1],'%)'))
+    tabout=cbind(tab$Count[,1],tabout)
+    names(tabout)[1]=rowTitle
+    writeWorksheet(wb,tabout[ord,],sheet,startRow=row1,startCol=col1)
+    
+} else {
+
+    if(percents && header)  ### adding headers indicating 'counts' and 'percents'
+    {
+      XLaddText(wb,sheet,"Counts:",row1=row1,col1=col1)
+      XLaddText(wb,sheet,"Percent:",row1=row1,col1=col1+widt)
+      row1=row1+1
+    }
+    writeWorksheet(wb,tab$Counts[ord,],sheet,startRow=row1,startCol=col1)
+    if(percents) writeWorksheet(wb,tab$Percent[ord,],sheet,startRow=row1,startCol=col1+widt)
 }
-writeWorksheet(wb,tab$Counts[ord,],sheet,startRow=row1,startCol=col1)
-if(percents) writeWorksheet(wb,tab$Percent[ord,],sheet,startRow=row1,startCol=col1+widt+1)
 
 
-
-setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+3), width=-1)
+setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+1), width=-1)
 saveWorkbook(wb)
 
 }  ### Function end
