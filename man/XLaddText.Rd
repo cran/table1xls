@@ -22,7 +22,7 @@ The function returns invisibly, after writing the data into \code{sheet} and sav
 Write text to a single cell in a specified file and sheet, and save the file.
 }
 \details{
-Since XLConnect only exports data to spreadsheets as `data.frame`, this function sends the text as an on-the-fly `data.frame` with one column and one row, and without writing the header or the row name.
+Since XLConnect only exports data to spreadsheets as \code{data.frame}, this function sends the text as an on-the-fly \code{data.frame} with one column and one row, and without writing the header or the row name.
 }
 \note{
 If the specified \code{sheet} does not exist, the function will create it, assuming that was the user's intent (e.g., add a text-only sheet with explanations to a file.) This is hard-coded, because the inadvertent creation of single-text sheets due to typos can be easily discovered upon opening the file :)
@@ -51,4 +51,3 @@ XLgeneric(t1,'cars',ftable(mtcars$cyl,mtcars$vs,mtcars$am),
 
 cat("Look for",paste(getwd(),"generic1.xls",sep='/'),"to see the results!\\n")
 }
-

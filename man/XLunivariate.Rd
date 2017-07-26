@@ -4,10 +4,12 @@
 \alias{XLunivariate}
 \title{Univariate Statistics Exported to Excel}
 \usage{
-XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
-  fun1 = list(fun = roundmean, name = "Mean"), fun2 = list(fun = roundSD,
-  name = "SD"), seps = c("", " (", ")"), title = NULL, rowTitle = "",
-  rowNames = NULL, ord = NULL, row1 = 1, col1 = 1, purge = FALSE, ...)
+XLunivariate(wb, sheet, calcvar, colvar = rep("", length(calcvar)),
+  table1mode = FALSE, fun1 = list(fun = roundmean, name = "Mean"),
+  fun2 = list(fun = roundSD, name = "SD"), seps = c("", " (", ")"),
+  sideBySide = FALSE, title = NULL, rowTitle = "", rowNames = NULL,
+  colNames = rowNames, ord = NULL, row1 = 1, col1 = 1, purge = FALSE,
+  ...)
 }
 \arguments{
 \item{wb}{a \code{\link[XLConnect]{workbook-class}} object}
@@ -16,17 +18,23 @@ XLunivariate(wb, sheet, calcvar, rowvar = rep("All", length(calcvar)),
 
 \item{calcvar}{vector: variable to calculate the statistics for (usually numeric, can be logical).}
 
-\item{rowvar}{vector: categorical variable to stratify \code{calcvar}'s summaries over. Default behavior if left unspecified, is to calculate overall summaries with the row title "All".}
+\item{colvar}{vector: categorical variable to stratify \code{calcvar}'s summaries over. Will show as columns in output only if \code{sideBySide=TRUE}; otherwise as rows. Default behavior if left unspecified, is to calculate overall summaries for a single row/column output.}
+
+\item{table1mode}{logical: is the function called from \code{\link{XLtable1}}? If \code{TRUE}, some modifications will be made to the output. Default \code{FALSE}.}
 
 \item{fun1, fun2}{two lists describing the utility functions that will calculate the statistics. Each list has a \code{fun} component for the function, and a \code{name} component for its name as it would appear in the column header.}
 
 \item{seps}{character vector of length 3, specifying the formatted separators before the output of \code{fun1$fun}, between the two outputs, and after the output of \code{fun2$fun}. Default behavior encloses the second output in parentheses. See 'Examples'.}
+
+\item{sideBySide}{logical: should output be arranged horizontally rather than vertically? Default \code{FALSE}.}
 
 \item{title}{character: an optional overall title to the table. Default (\code{NULL}) is no title.}
 
 \item{rowTitle}{character: the title to be placed above the row name column (default empty string)}
 
 \item{rowNames}{character vector of row names. Default behavior (\code{NULL}): automatically determined from data}
+
+\item{colNames}{column names for stratifying variable, used when \code{sideBySide=TRUE}. Default: equal to \code{rowNames}.}
 
 \item{ord}{numeric vector specifying row-index order (i.e., a re-ordering of \code{rowvar}'s levels) in the produced table. Default (\code{NULL}) is no re-ordering.}
 
@@ -43,7 +51,7 @@ The function returns invisibly, after writing the data into \code{sheet} and sav
 Calculates univariate summary statistics (optionally stratified), exports the formatted output to a spreadsheet, and saves the file.
 }
 \details{
-This function evaluates up to 2 univariate functions on the input vector \code{calcvar}, either as a single sample, or grouped by strata defined via \code{rowvar}. It produces a single-column table, each cell containing the formatted results from the two functions. The table is exported to a spreadsheet and the file is saved.
+This function evaluates up to 2 univariate functions on the input vector \code{calcvar}, either as a single sample, or grouped by strata defined via \code{colvar} (which is named this way for compatibility with \code{\link{XLtable1}}). It produces a single-column or single-row table (apart from row/column headers), with each interior cell containing the formatted results from the two functions. The table is exported to a spreadsheet and the file is saved.
 
 The cell can be formatted to show a combined result, e.g. "Mean (SD)" which is the default. Tne function is quite mutable: both \code{fun1$fun, fun2$fun} and the strings separating their formatted output can be user-defined. The functions can return either a string (i.e., a formatted output) or a number that will be interpreted as a string in subsequent formatting.
 The default calls \code{\link{roundmean},\link{roundSD}} and prints the summaries in \code{"mean(SD)"} format.
@@ -67,10 +75,9 @@ XLunivariate(book2,"weightByAge",ChickWeight$weight,ChickWeight$Time,
              fun2=list(fun=emptee,name=""))
 cat("Look for",paste(getwd(),"chick2.xls",sep='/'),"to see the results!\\n")
 }
-\author{
-Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
-}
 \seealso{
 Uses \code{\link{writeWorksheet}} to access the spreadsheet, \code{\link{rangeString}} for some utilities that can be used as \code{fun1$fun,fun2$fun}. For one-way (univariate) contingency tables, \code{\link{XLoneWay}}.
 }
-
+\author{
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+}

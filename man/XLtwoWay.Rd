@@ -4,11 +4,12 @@
 \alias{XLtwoWay}
 \title{Two-way Contingency Tables exported to a spreadsheet}
 \usage{
-XLtwoWay(wb, sheet, rowvar, colvar, sumby = 1, rowTitle = "",
-  rowNames = NULL, colNames = NULL, ord = NULL, row1 = 1, col1 = 1,
-  title = NULL, header = FALSE, purge = FALSE,
+XLtwoWay(wb, sheet, rowvar, colvar, table1mode = FALSE, sumby = 1,
+  rowTitle = "", rowNames = NULL, colNames = NULL, ord = NULL,
+  row1 = 1, col1 = 1, title = NULL, header = FALSE, purge = FALSE,
   digits = ifelse(length(rowvar) >= 500, 1, 0), useNA = "ifany",
-  percents = TRUE, combine = percents)
+  percents = TRUE, combine = percents, testname = "chisq.test",
+  pround = 3, testBelow = FALSE, margins = TRUE, ...)
 }
 \arguments{
 \item{wb}{an \code{\link[XLConnect]{workbook-class}} object}
@@ -18,6 +19,8 @@ XLtwoWay(wb, sheet, rowvar, colvar, sumby = 1, rowTitle = "",
 \item{rowvar}{vector: categorical variable (logical, numeric, character, factor, etc.) for the table's rows}
 
 \item{colvar}{vector: categorical variable (logical, numeric, character factor, etc.) for the table's columns}
+
+\item{table1mode}{logical: is the function called from \code{\link{XLtable1}}? If \code{TRUE}, some modifications will be made to the output. Default \code{FALSE}.}
 
 \item{sumby}{whether percentages should be calculated across rows (1, default) or columns (2).}
 
@@ -42,6 +45,16 @@ XLtwoWay(wb, sheet, rowvar, colvar, sumby = 1, rowTitle = "",
 \item{percents}{logical: would you like only a count table (\code{FALSE}), or also a percents table side-by-side with the the count table (\code{TRUE}, default)?}
 
 \item{combine}{logical: should counts and percents be combined to the popular \code{"Count(percent)"} format, or presented side-by-side in separate tables? (default: same value as \code{percents})}
+
+\item{testname}{string, the \emph{name} of a function to run a significance test on the table. Default \code{chisq.test}. If you want no test, set \code{testname=NULL}}
+
+\item{pround}{number of significant digits in test p-value representation. Default 3.}
+
+\item{testBelow}{logical, should test p-value be placed right below the table? Default \code{FALSE}, which places it next to the table's right edge, one row below the column headings.}
+
+\item{margins}{logical: should margins with totals be returned? Default \code{TRUE}.}
+
+\item{...}{additional arguments as needed, to pass on to \code{get(textfun)}}
 }
 \value{
 The function returns invisibly, after writing the data into \code{sheet}.
@@ -79,22 +92,24 @@ handNames=c("0-1",2:4,"5 or more")
 
 book3<-XLwriteOpen("hands.xls") 
 XLtwoWay(book3,"PartnersAKQcounts",cut(hand1,c(0,2:6,14)-0.5),cut(hand2,c(0,2:5,14)-0.5),
-         rowTitle="Hand 1 (rows) vs. Hand 2",rowNames=c(handNames[-5],5,"6 or more","Total"),
+         rowTitle="AKQ's in Hand 1 (rows) vs. Hand 2",
+         rowNames=c(handNames[-5],5,"6 or more","Total"),
          colNames=c(handNames,"Total"),header=TRUE)
 
 ## Same table, but percents now condition on columns rather than rows, 
-## counts/pct header row removed - but a title added:
+## counts/pct header row removed - but a title added.
+## Also, Chi-square p-value now placed below the table rather than the default top-right corner
 XLtwoWay(book3,"PartnersAKQcounts",cut(hand1,c(0,2:6,14)-0.5),cut(hand2,c(0,2:5,14)-0.5),
-         rowTitle="Hand 1 (rows) vs. Hand 2",rowNames=c(handNames[-5],5,"6 or more","Total"),
+         rowTitle="AKQ's in Hand 1 (rows) vs. Hand 2",
+         rowNames=c(handNames[-5],5,"6 or more","Total"),
          colNames=c(handNames,"Total"),header=FALSE,row1=12,sumby=2,
-         title="Now Percents are Summed by Column:")
+         title="Now Percents are Summed by Column:",testBelow=TRUE)
 
 cat("Look for",paste(getwd(),"hands.xls",sep='/'),"to see the results!\\n")
-}
-\author{
-Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
 Uses \code{\link{writeWorksheet}} to access the spreadsheet. See \code{\link{setStyleAction}} to control the output style. If interested in one-way tables, see \code{\link{XLoneWay}}.
 }
-
+\author{
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+}

@@ -1,17 +1,17 @@
 Package: table1xls
 Type: Package
-Title: Produces Summary Tables and Exports Them to Multi-Tab
-        Spreadsheet Format (.xls or .xlsx)
-Version: 0.3.2
-Date: 2016-07-18
-Author: Assaf P. Oron
+Title: Exports Reproducible Summary Tables to Multi-Tab Spreadsheet
+        Files (.xls or .xlsx)
+Version: 0.4.0
+Date: 2017-07-26
+Author: Assaf P. Oron [cre, aut]
 Maintainer: Assaf P. Oron <assaf.oron@seattlechildrens.org>
-Description: A collection of time-saving wrappers for producing and exporting
+Description: A collection of time-saving wrappers for reproducible export of
     summary tables commonly used in scientific articles, to .xls/.xlsx multi-tab spreadsheets, while controlling spreadsheet layout. Powered by 'XLConnect'/'rJava' utilities.
 License: GPL-3
 Imports: XLConnect
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2016-07-18 21:29:54 UTC; aoron
+Packaged: 2017-07-26 18:03:42 UTC; aoron
 Repository: CRAN
-Date/Publication: 2016-07-19 02:25:15
+Date/Publication: 2017-07-26 22:04:36 UTC

@@ -4,17 +4,20 @@
 \alias{XLoneWay}
 \title{One-way Contingency Tables exported to a spreadsheet}
 \usage{
-XLoneWay(wb, sheet, rowvar, title = NULL, rowTitle = "Value",
-  rowNames = NULL, ord = NULL, row1 = 1, col1 = 1, purge = FALSE,
-  digits = ifelse(length(rowvar) >= 500, 1, 0), combine = TRUE,
-  useNA = "ifany")
+XLoneWay(wb, sheet, rowvar, table1mode = FALSE, title = NULL,
+  rowTitle = "Value", rowNames = NULL, colNames = NULL, ord = NULL,
+  row1 = 1, col1 = 1, digits = ifelse(length(rowvar) >= 500, 1, 0),
+  combine = TRUE, useNA = "ifany", testname = NULL, testBelow = FALSE,
+  margins = TRUE, ..., purge = FALSE, pround = 3)
 }
 \arguments{
 \item{wb}{a \code{\link[XLConnect]{workbook-class}} object}
 
 \item{sheet}{numeric or character: a worksheet name (character) or position (numeric) within \code{wb}.}
 
-\item{rowvar}{vector: the categorical variable (logical, numeric, character, factor, etc.) to be tabulated}
+\item{rowvar}{vector: the categorical variable (logical, numeric, character, factor, etc.) to be tabulated.}
+
+\item{table1mode}{logical: is the function called from \code{\link{XLtable1}}? If \code{TRUE}, some modifications will be made to the output. Default \code{FALSE}.}
 
 \item{title}{character: an optional overall title to the table. Default (\code{NULL}) is no title.}
 
@@ -22,17 +25,29 @@ XLoneWay(wb, sheet, rowvar, title = NULL, rowTitle = "Value",
 
 \item{rowNames}{character: vector of row names. Default behavior (\code{NULL}): automatically determined from data}
 
+\item{colNames}{dummy argument for compatibility with calls from \code{\link[=XLtable1]{XLtable1()}}. Otherwise ignored by function.}
+
 \item{ord}{numeric vector specifying row-index order in the produced table. Default (\code{NULL}) is no re-ordering.}
 
 \item{row1, col1}{numeric: the first row and column occupied by the table (title included if relevant).}
-
-\item{purge}{logical should \code{sheet} be created anew, by first removing the previous copy if it exists? (default \code{FALSE})}
 
 \item{digits}{numeric: how many digits (after the decimal point) to show in the percents? Defaults to 1 if n>=500, 0 otherwise.}
 
 \item{combine}{logical: should counts and percents be combined to the popular \code{"Count(percent)"} format, or presented side-by-side? (default \code{TRUE})}
 
 \item{useNA}{How to handle missing values. Passed on to \code{\link{table}} (see help on that function for options).}
+
+\item{testname}{string, the \emph{name} of a function to run a significance test on the table. Default \code{NULL} (no test).}
+
+\item{testBelow}{logical, should test p-value be placed right below the table? Default \code{FALSE}, which places it next to the table's right edge, one row below the column headings}
+
+\item{margins}{logical: should margins with totals be returned? Default \code{TRUE}.}
+
+\item{...}{additional arguments as needed, to pass on to \code{get(textfun)}; for example, the reference frequencies for a Chi-Squared GoF test.}
+
+\item{purge}{logical should \code{sheet} be created anew, by first removing the previous copy if it exists? (default \code{FALSE})}
+
+\item{pround}{number of significant digits in test p-value representation. Default 3.}
 }
 \value{
 The function returns invisibly, after writing the data into \code{sheet} and saving the file.
@@ -51,14 +66,14 @@ See the \code{\link{XLtwoWay}} help page, for behavior regarding new-sheet creat
 book1<-XLwriteOpen("chick1.xls") 
 XLoneWay(book1,"Diets",ChickWeight$Diet)
 ### Now in separate columns, and with a title - note it shifts the table down.
+### Also adding a Chi-Square goodness of fit (GoF) test vs. a 2:1:1:1 allocation
 XLoneWay(book1,"Diets",ChickWeight$Diet,combine=FALSE,row1=10,
-         rowTitle="Diet",title="Counts by Diet:")
+         rowTitle="Diet",title="Counts by Diet:",testname='chisq.test',p=c(2,1,1,1)/5)
 cat("Look for",paste(getwd(),"chick1.xls",sep='/'),"to see the results!\\n")
-}
-\author{
-Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
 \seealso{
 If interested in other descriptive summaries, see \code{\link{XLunivariate}}. For two-way contingency tables, see \code{\link{XLtwoWay}}.
 }
-
+\author{
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+}

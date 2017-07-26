@@ -2,10 +2,16 @@
 
 
 # This function is internal
-fancytab2<-function(x,y=NULL,digits,sumby=2,rowvar="",rowNames=NULL,missings='ifany')
+fancytab2<-function(x,y=NULL,digits,sumby=2,rowvar="",rowNames=NULL,missings='ifany',margins=TRUE)
 {
-tout=addmargins(table(x,y,useNA=missings))
-pout=format(round(200*prop.table(tout,margin=sumby),digits),nsmall=digits,trim=TRUE)
+tout=table(x,y,useNA=missings)
+pout=niceRound(100*prop.table(tout,margin=sumby),digits)
+
+if(margins)
+{
+  tout=addmargins(tout)
+  pout=niceRound(200*prop.table(tout,margin=sumby),digits)
+}
 rownames(tout)[is.na(rownames(tout))]="missing"
 rownames(pout)[is.na(rownames(pout))]="missing"
 colnames(tout)[is.na(colnames(tout))]="missing"
@@ -44,6 +50,7 @@ return(list(Counts=tout,Percent=pout))
 ##' @param sheet numeric or character: a worksheet name (character) or position (numeric) within \code{wb}.
 ##' @param rowvar vector: categorical variable (logical, numeric, character, factor, etc.) for the table's rows
 ##' @param colvar vector: categorical variable (logical, numeric, character factor, etc.) for the table's columns
+##' @param table1mode logical: is the function called from \code{\link{XLtable1}}? If \code{TRUE}, some modifications will be made to the output. Default \code{FALSE}.
 ##' @param sumby whether percentages should be calculated across rows (1, default) or columns (2).
 ##' @param rowTitle character: the title to be placed above the row name column (default empty string)
 ##' @param rowNames,colNames character vector of row and column names. Default behavior (\code{NULL}): automatically determined from data
@@ -56,6 +63,11 @@ return(list(Counts=tout,Percent=pout))
 ##' @param useNA How to handle missing values. Passed on to \code{\link{table}} (see help on that function for options).
 ##' @param percents logical: would you like only a count table (\code{FALSE}), or also a percents table side-by-side with the the count table (\code{TRUE}, default)?  
 ##' @param combine logical: should counts and percents be combined to the popular \code{"Count(percent)"} format, or presented side-by-side in separate tables? (default: same value as \code{percents}) 
+##' @param testname string, the *name* of a function to run a significance test on the table. Default `chisq.test`. If you want no test, set \code{testname=NULL}
+##' @param pround number of significant digits in test p-value representation. Default 3.
+##' @param testBelow logical, should test p-value be placed right below the table? Default \code{FALSE}, which places it next to the table's right edge, one row below the column headings.
+##' @param margins logical: should margins with totals be returned? Default \code{TRUE}.
+##' @param ... additional arguments as needed, to pass on to \code{get(textfun)}
 ##' 
 ##' @return The function returns invisibly, after writing the data into \code{sheet}.
 ##' @example inst/examples/Ex2way.r 
@@ -65,14 +77,15 @@ return(list(Counts=tout,Percent=pout))
 
 ##' @export
 
-XLtwoWay<-function(wb,sheet,rowvar,colvar,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,title=NULL,header=FALSE,purge=FALSE,digits=ifelse(length(rowvar)>=500,1,0),useNA='ifany',percents=TRUE,combine=percents)
+XLtwoWay<-function(wb,sheet,rowvar,colvar,table1mode=FALSE,sumby=1,rowTitle="",rowNames=NULL,colNames=NULL,ord=NULL,row1=1,col1=1,title=NULL,header=FALSE,purge=FALSE,digits=ifelse(length(rowvar)>=500,1,0),useNA='ifany',percents=TRUE,combine=percents,testname='chisq.test',pround=3,testBelow=FALSE,margins=TRUE,...)
 {
 if(length(rowvar)!=length(colvar)) stop("x:y length mismatch.\n")
+if(table1mode) margins<-FALSE
 if(purge) removeSheet(wb,sheet)
 if(!existsSheet(wb,sheet)) createSheet(wb,sheet)
 
 ### Producing counts and percents table via the internal function 'fancytab2'
-tab=fancytab2(rowvar,colvar,sumby=sumby,rowvar=rowTitle,rowNames=rowNames,digits=digits,missings=useNA)
+tab=fancytab2(rowvar,colvar,sumby=sumby,rowvar=rowTitle,rowNames=rowNames,digits=digits,missings=useNA,margins=margins)
 
 if(!is.null(title))  ### Adding a title
 {
@@ -108,6 +121,15 @@ if(combine) ### combining counts and percents to a single table (default)
     if(percents) writeWorksheet(wb,tab$Percent[ord,],sheet,startRow=row1,startCol=col1+widt)
 }
 
+### Perform test and p-value on table
+if(!is.null(testname) && length(unique(rowvar))>1 && length(unique(colvar))>1 )
+{
+    pval=suppressWarnings(try(get(testname)(rowvar,colvar,...)$p.value))
+    ptext=paste(testname,'p:',ifelse(is.finite(pval),niceRound(pval,pround,plurb=TRUE),'Error'))
+    prow=ifelse(testBelow,row1+dim(tab$Counts)[1]+1,row1+1)
+    pcol=ifelse(testBelow,col1,col1+widt-1)
+    XLaddText(wb,sheet,ptext,row1=prow,col1=pcol)
+}
 
 setColumnWidth(wb, sheet = sheet, column = col1:(col1+2*widt+1), width=-1)
 saveWorkbook(wb)
@@ -119,7 +141,7 @@ saveWorkbook(wb)
 ##' 
 ##' Calculates univariate summary statistics (optionally stratified), exports the formatted output to a spreadsheet, and saves the file.
 ##'
-##' This function evaluates up to 2 univariate functions on the input vector \code{calcvar}, either as a single sample, or grouped by strata defined via \code{rowvar}. It produces a single-column table, each cell containing the formatted results from the two functions. The table is exported to a spreadsheet and the file is saved. 
+##' This function evaluates up to 2 univariate functions on the input vector \code{calcvar}, either as a single sample, or grouped by strata defined via \code{colvar} (which is named this way for compatibility with \code{\link{XLtable1}}). It produces a single-column or single-row table (apart from row/column headers), with each interior cell containing the formatted results from the two functions. The table is exported to a spreadsheet and the file is saved. 
 ##' 
 ##' The cell can be formatted to show a combined result, e.g. "Mean (SD)" which is the default. Tne function is quite mutable: both \code{fun1$fun, fun2$fun} and the strings separating their formatted output can be user-defined. The functions can return either a string (i.e., a formatted output) or a number that will be interpreted as a string in subsequent formatting.
 ##' The default calls \code{\link{roundmean},\link{roundSD}} and prints the summaries in \code{"mean(SD)"} format.
@@ -138,12 +160,15 @@ saveWorkbook(wb)
 ##' @param wb a \code{\link[XLConnect]{workbook-class}} object
 ##' @param sheet numeric or character: a worksheet name (character) or position (numeric) within \code{wb}.
 ##' @param calcvar vector: variable to calculate the statistics for (usually numeric, can be logical).
-##' @param rowvar vector: categorical variable to stratify \code{calcvar}'s summaries over. Default behavior if left unspecified, is to calculate overall summaries with the row title "All". 
+##' @param colvar vector: categorical variable to stratify \code{calcvar}'s summaries over. Will show as columns in output only if \code{sideBySide=TRUE}; otherwise as rows. Default behavior if left unspecified, is to calculate overall summaries for a single row/column output. 
+##' @param table1mode logical: is the function called from \code{\link{XLtable1}}? If \code{TRUE}, some modifications will be made to the output. Default \code{FALSE}.
 ##' @param fun1,fun2 two lists describing the utility functions that will calculate the statistics. Each list has a \code{fun} component for the function, and a \code{name} component for its name as it would appear in the column header.
 ##' @param seps character vector of length 3, specifying the formatted separators before the output of \code{fun1$fun}, between the two outputs, and after the output of \code{fun2$fun}. Default behavior encloses the second output in parentheses. See 'Examples'.
+##' @param sideBySide logical: should output be arranged horizontally rather than vertically? Default \code{FALSE}.
 ##' @param title character: an optional overall title to the table. Default (\code{NULL}) is no title.
 ##' @param rowTitle character: the title to be placed above the row name column (default empty string)
 ##' @param rowNames character vector of row names. Default behavior (\code{NULL}): automatically determined from data
+##' @param colNames column names for stratifying variable, used when \code{sideBySide=TRUE}. Default: equal to \code{rowNames}.
 ##' @param ord numeric vector specifying row-index order (i.e., a re-ordering of \code{rowvar}'s levels) in the produced table. Default (\code{NULL}) is no re-ordering.
 ##' @param row1,col1 numeric: the first row and column occupied by the table (title included if relevant).
 ##' @param purge logical: should \code{sheet} be created anew, by first removing the previous copy if it exists? (default \code{FALSE})
@@ -151,18 +176,37 @@ saveWorkbook(wb)
 ##'
 ##' @export
 
-XLunivariate<-function(wb,sheet,calcvar,rowvar=rep("All",length(calcvar)),fun1=list(fun=roundmean,name="Mean"),fun2=list(fun=roundSD,name="SD"),seps=c('',' (',')'),title=NULL,rowTitle="",rowNames=NULL,ord=NULL,row1=1,col1=1,purge=FALSE,...)
+XLunivariate<-function(wb,sheet,calcvar,colvar=rep("",length(calcvar)),table1mode=FALSE,fun1=list(fun=roundmean,name="Mean"),fun2=list(fun=roundSD,name="SD"),seps=c('',' (',')'),sideBySide=FALSE,title=NULL,rowTitle="",rowNames=NULL,colNames=rowNames,ord=NULL,row1=1,col1=1,purge=FALSE,...)
 { 
+if(table1mode) 
+{
+  if(length(unique(colvar))>1) sideBySide<-TRUE
+  if(is.null(colvar)) colvar=rep("",length(calcvar))
+  rowNames=rowTitle
+  rowTitle=""
+}  
 if(purge) removeSheet(wb,sheet)  
 if(!existsSheet(wb,sheet)) createSheet(wb,sheet)
 
-num1=tapply(calcvar,rowvar,fun1$fun,...)
-num2=tapply(calcvar,rowvar,fun2$fun,...)
+num1=tapply(calcvar,colvar,fun1$fun,...)
+num2=tapply(calcvar,colvar,fun2$fun,...)
 if (is.null(ord)) ord=1:length(num1)
+if(length(ord)!=length(num1)) stop("Argument 'ord' in XLunivariate has wrong length.")
 if (is.null(rowNames)) rowNames=names(num1)
 
-outdat=data.frame(cbind(rowNames,paste(seps[1],num1,seps[2],num2,seps[3],sep='')))
-names(outdat)=c(rowTitle,paste(seps[1],fun1$name,seps[2],fun2$name,seps[3],sep=''))
+statname=paste(seps[1],fun1$name,seps[2],fun2$name,seps[3],sep='')
+if(sideBySide)
+{
+  outdat=data.frame(statname)
+  if(table1mode) {rowTitle=statname;outdat[1]=rowNames}
+  for (a in ord) outdat=cbind(outdat,paste(seps[1],num1[a],seps[2],num2[a],seps[3],sep=''))
+  if(!is.null(colNames) && length(colNames)==length(ord)) names(num1)=colNames
+  names(outdat)=c(rowTitle,names(num1)[ord])
+  ord=1
+} else {
+  outdat=data.frame(cbind(rowNames,paste(seps[1],num1,seps[2],num2,seps[3],sep='')))
+  names(outdat)=c(rowTitle,statname)
+}
 
 if(!is.null(title))  ### Adding a title
 {

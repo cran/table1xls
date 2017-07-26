@@ -23,7 +23,7 @@ XLgeneric(wb, sheet, dataset, title = NULL, addRownames = FALSE,
 
 \item{rowTitle}{character: the title to be placed above the row name column (default "Name")}
 
-\item{colNames}{character: vector of column names to replace the original ones. Default \code{NULL}, meaning that the original names are left intact. Note that the title for the row-names column (if \code{addRownames=TRUE}) is *not* considered part of \code{colNames}, and is set separately.}
+\item{colNames}{character: vector of column names to replace the original ones. Default \code{NULL}, meaning that the original names are left intact. Note that the title for the row-names column (if \code{addRownames=TRUE}) is \emph{not} considered part of \code{colNames}, and is set separately.}
 
 \item{row1, col1}{numeric: the first row and column occupied by the output.}
 
@@ -66,10 +66,9 @@ XLgeneric(t1,'cars',ftable(mtcars$cyl,mtcars$vs,mtcars$am),
 
 cat("Look for",paste(getwd(),"generic1.xls",sep='/'),"to see the results!\\n")
 }
-\author{
-Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
-}
 \seealso{
 For two-way contingency tables, see \code{\link{XLtwoWay}}.
 }
-
+\author{
+Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
+}

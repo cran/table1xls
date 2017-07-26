@@ -6,8 +6,8 @@
 \usage{
 XLregresSummary(wb, sheet, betas, SE = NULL, varnames = NULL, colid = 1:2,
   transfun = identity, title = NULL, effname = "Difference",
-  confac = qnorm(0.975), roundig = 2, pfun = function(x) 2 *
-  pnorm(-abs(x)), pround = 3, row1 = 1, col1 = 1, purge = FALSE)
+  alpha = 0.05, df = NA, roundig = 2, pround = 3, row1 = 1,
+  col1 = 1, purge = FALSE)
 }
 \arguments{
 \item{wb}{a \code{\link[XLConnect]{workbook-class}} object}
@@ -28,11 +28,12 @@ XLregresSummary(wb, sheet, betas, SE = NULL, varnames = NULL, colid = 1:2,
 
 \item{effname}{character: a string explaining what the effect stands for, e.g. "difference" (the default), "Odds Ratio", etc.}
 
-\item{confac}{numeric: the proportionality factor for calculating confidence-intervals. Default produces 95\% Normal intervals.}
+\item{alpha}{numeric, Type I error for CIs. Default 0.05 for 95\% CIs.}
+
+\item{df}{numeric, residual degrees of freedom. If a finite value is provided, t-distribution p-value and CIs will be calculated; otherwise Normality is assumed. Default \code{NA}.
+##' @param title character: an optional overall title to the table. Default (\code{NULL}) is no title.}
 
 \item{roundig}{numeric: how many digits (after the decimal point) to round the effect estimate to?}
-
-\item{pfun}{function used to calculate the p-value, based on the signal-to-noise ratio \code{betas/SE}. Default assumes two-sided Normal p-values.}
 
 \item{pround}{numeric: how many digits (after the decimal point) to round the p-value to? P-values rounded down to zero will show up as "<" the smallest nonzero value, e.g. with the default \code{pround=3} p-values smaller than 0.0005 will show up as "<0.001".}
 
@@ -66,11 +67,17 @@ quakemod1=summary(lm(log10(accel)~mag+log10(dist),data=attenu))
 
 
 ## Model-scale summaries; we don't care for the intercept.
+# First (wrongly) using Normal distribution for inference/CIs
 
 XLregresSummary(book4,"ModelScale",varnames=quakenames,
                 betas=quakemod1$coef[-1,1],SE=quakemod1$coef[-1,2],
-                ,title="Log-Ground Acceleration Effects",
-                confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
+                ,title="Log-Ground Acceleration Effects, Normal CIs")
+
+# Now using t-distribution as befits linear regression
+
+XLregresSummary(book4,"ModelScale",varnames=quakenames,
+                betas=quakemod1$coef[-1,1],SE=quakemod1$coef[-1,2],
+                ,title="Log-Ground Acceleration Effects",df=quakemod1$df[2],col1=6)
 
 ## Same thing, but using matrix input; no need to provide SE and names. 
 ## It is arguably still nicer to provide your own names - but could be a reproducibility risk. 
@@ -78,7 +85,7 @@ XLregresSummary(book4,"ModelScale",varnames=quakenames,
 
 XLregresSummary(book4,"ModelScale",betas=quakemod1$coef[-1,],
                 pround=6,title="Log-Ground Acceleration Effects",
-                confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179),row1=8)
+                ,df=quakemod1$df[2],row1=8)
 
 ## Effects are arguably more meaningful as percent change. 
 ## So... still same model, but different summaries. 
@@ -88,7 +95,7 @@ XLregresSummary(book4,"PercentChange",varnames=quakenames,
                 betas=quakemod1$coef[-1,],
                 roundig=1,pround=6,title="Relative Ground Acceleration Effects",
                 transfun=function(x) 100*(10^x-1),
-                effname="Percent Change",confac=qt(0.975,179),pfun=function(x) 2*pt(-abs(x),df=179))
+                effname="Percent Change",df=quakemod1$df[2])
 
 cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 
@@ -103,11 +110,9 @@ cat("Look for",paste(getwd(),"attenu.xls",sep='/'),"to see the results!\\n")
 # SE=sqrt(diag(vcov(quakemod2)))[-1],
 # roundig=1,pround=6,
 # title="Relative Ground Acceleration Effects",
-# transfun=function(x) 100*(10^x-1),effname="Percent Change",
-# confac=qt(0.975,160),pfun=function(x) 2*pt(-abs(x),df=160))
+# transfun=function(x) 100*(10^x-1),effname="Percent Change",df=160)
 
 }
 \author{
 Assaf P. Oron \code{<assaf.oron.at.seattlechildrens.org>}
 }
-
